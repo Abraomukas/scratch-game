@@ -1,3 +1,11 @@
-jar:
-    mvn clean && mvn package
-    java -jar target/scratch-game-1.0.jar
+.PHONY: jar	run
+
+jar: ## Creates an executable JAR
+	@echo "Creating JAR..."
+	mvn clean
+	java -d sr
+
+run:
+
+
+# javac src/main/java/org/example/Main.java
