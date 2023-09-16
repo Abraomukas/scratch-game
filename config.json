@@ -1,3 +1,4 @@
 {
-  "message": "Hello, world!"
+  "columns": 3,
+  "rows": 3
 }
