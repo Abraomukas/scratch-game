@@ -1,11 +1,14 @@
 package org.example;
 
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.io.FileReader;
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 public class Main {
     public static void main(String[] args) {
@@ -17,17 +20,52 @@ public class Main {
             System.out.println("The second parameter is NOT correct! It has to be '--betting-amount'");
         } else {
             String configPath = args[1];
-//            String configPath = "config.json";
 
-            JSONParser jsonParser = new JSONParser();
+            ObjectMapper objectMapper = new ObjectMapper();
+
             try {
-                JSONObject config = (JSONObject) jsonParser.parse(new FileReader(configPath));
-                Long columns = (Long) config.get("columns");
-                Long rows = (Long) config.get("rows");
+                JsonNode jsonNode = objectMapper.readTree(new File("config.json"));
 
+                int columns = jsonNode.get("columns").asInt();
+                int rows = jsonNode.get("rows").asInt();
+                JsonNode allSymbols = jsonNode.get("symbols");
+
+                List<Symbol> standard = new ArrayList<>();
+                List<Symbol> bonus = new ArrayList<>();
+
+                if (allSymbols.isObject()) {
+                    Iterator<Map.Entry<String, JsonNode>> symbols = allSymbols.fields();
+                    while (symbols.hasNext()) {
+                        Map.Entry<String, JsonNode> symbol = symbols.next();
+                        String objectName = symbol.getKey();
+                        JsonNode objectNode = symbol.getValue();
+
+                        // Get values from the nested object
+                        String type = objectNode.get("type").asText();
+                        int multiplier;
+                        JsonNode rewardMultiplier = objectNode.findValue("reward_multiplier");
+                        if (rewardMultiplier == null) {
+                            multiplier = 1;
+                        } else {
+                            multiplier = objectNode.get("reward_multiplier").asInt();
+                        }
+
+                        if (type.equals("standard")) {
+                            Symbol tmp = new Symbol(objectName, type, multiplier);
+                            standard.add(tmp);
+                            System.out.println(tmp.toString());
+                        }
+
+                        if (type.equals("bonus")) {
+                            Symbol tmp = new Symbol(objectName, type, multiplier);
+                            bonus.add(tmp);
+                            System.out.println(tmp.toString());
+                        }
+                    }
+                }
 
                 System.out.println("Creating a " + columns + "x" + rows + " matrix...");
-            } catch (IOException | ParseException e) {
+            } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
