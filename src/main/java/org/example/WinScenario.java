@@ -2,8 +2,9 @@ package org.example;
 
 import lombok.Data;
 
-public @Data class Symbol {
+public @Data class WinScenario {
     private String label;
     private int multiplier;
-    private String type;
+    private int counter;
+    private String[] coveredArea;
 }
