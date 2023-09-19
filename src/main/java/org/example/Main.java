@@ -6,10 +6,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -20,15 +17,39 @@ public class Main {
         } else if (!args[2].equals("--betting-amount")) {
             System.out.println("The second parameter is NOT correct! It has to be '--betting-amount'");
         } else {
-            String configPath = args[1];
+            Scanner scanner = new Scanner(System.in);
+            int bettingAmount = 0;
+            boolean validInput = false;
+
+            while (!validInput) {
+                try {
+                    System.out.println("Please enter a betting amount: ");
+
+                    if (scanner.hasNextInt()) {
+                        bettingAmount = scanner.nextInt();
+                        validInput = true;
+                    } else {
+                        scanner.nextLine();
+                        System.out.println("Incorrect input!");
+                        System.out.println("Please enter a betting amount: ");
+                    }
+                } catch (InputMismatchException exception) {
+                    scanner.nextLine();
+                    System.out.println("Incorrect input!");
+                    System.out.println("Please enter a betting amount: ");
+                }
+            }
+
+            scanner.close();
 
             ObjectMapper objectMapper = new ObjectMapper();
+            String configPath = args[1];
 
             try {
-                JsonNode jsonNode = objectMapper.readTree(new File("config.json"));
+                JsonNode jsonNode = objectMapper.readTree(new File(configPath));
 
-                int columns = jsonNode.get("columns").asInt();
                 int rows = jsonNode.get("rows").asInt();
+                int columns = jsonNode.get("columns").asInt();
 
                 System.out.println("Loading configuration...");
 
@@ -42,6 +63,7 @@ public class Main {
 
                 if (allSymbols.isObject()) {
                     Iterator<Map.Entry<String, JsonNode>> symbols = allSymbols.fields();
+
                     while (symbols.hasNext()) {
                         Map.Entry<String, JsonNode> symbol = symbols.next();
                         String label = symbol.getKey();
@@ -50,6 +72,7 @@ public class Main {
                         String type = objectNode.get("type").asText();
                         int multiplier;
                         JsonNode rewardMultiplier = objectNode.findValue("reward_multiplier");
+
                         if (rewardMultiplier == null) {
                             multiplier = 1;
                         } else {
@@ -90,6 +113,7 @@ public class Main {
 
                             Iterator<Map.Entry<String, JsonNode>> symbolFields = symbolObject.fields();
                             List<SymbolProbability> standardSymbolsProbabilities = new ArrayList<>();
+
                             while (symbolFields.hasNext()) {
                                 Map.Entry<String, JsonNode> symbolField = symbolFields.next();
                                 String label = symbolField.getKey();
@@ -119,6 +143,7 @@ public class Main {
                         if (symbols.isObject()) {
                             Iterator<Map.Entry<String, JsonNode>> symbolFields = symbols.fields();
                             List<SymbolProbability> bonusSymbolsProbabilities = new ArrayList<>();
+
                             while (symbolFields.hasNext()) {
                                 Map.Entry<String, JsonNode> bonusField = symbolFields.next();
                                 String label = bonusField.getKey();
@@ -150,6 +175,7 @@ public class Main {
 
                 if (allWinCombinations.isObject()) {
                     Iterator<Map.Entry<String, JsonNode>> winCombinations = allWinCombinations.fields();
+
                     while (winCombinations.hasNext()) {
                         Map.Entry<String, JsonNode> winCombination = winCombinations.next();
                         String label = winCombination.getKey();
@@ -197,32 +223,37 @@ public class Main {
 
                 System.out.println("Configuration loaded!");
 
-                System.out.println("STANDARD SYMBOLS - " + standardSymbols.size());
+//                System.out.println("STANDARD SYMBOLS - " + standardSymbols.size());
 //                for (Symbol standardS : standardSymbols) {
 //                    System.out.println(standardS.toString());
 //                }
 
-                System.out.println("BONUS SYMBOLS - " + bonusSymbols.size());
+//                System.out.println("BONUS SYMBOLS - " + bonusSymbols.size());
 //                for (Symbol bonusS : bonusSymbols) {
 //                    System.out.println(bonusS.toString());
 //                }
 
                 System.out.println("STANDARD PROBABILITIES - " + standardProbabilities.size());
-//                for (Probability standardP : standardProbabilities) {
-//                    System.out.println(standardP.toString());
-//                }
+                for (Probability standardP : standardProbabilities) {
+                    System.out.println(standardP.toString());
+                }
 
-                System.out.println("BONUS PROBABILITIES - " + bonusProbabilities.size());
+//                System.out.println("BONUS PROBABILITIES - " + bonusProbabilities.size());
 //                for (Probability bonusP : bonusProbabilities) {
 //                    System.out.println(bonusP.toString());
 //                }
 
-                System.out.println("WIN SCENARIOS  - " + winScenarios.size());
+//                System.out.println("WIN SCENARIOS  - " + winScenarios.size());
 //                for (WinScenario winS : winScenarios) {
 //                    System.out.println(winS.toString());
 //                }
 
-                System.out.println("Creating a " + columns + "x" + rows + " matrix...");
+                System.out.println("Creating a " + rows + "x" + columns + " matrix...");
+
+                Matrix gameMatrix = new Matrix(rows, columns, standardSymbols, bonusSymbols,
+                        standardProbabilities, bonusProbabilities);
+
+                System.out.println("BETTING AMOUNT - " + bettingAmount);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
