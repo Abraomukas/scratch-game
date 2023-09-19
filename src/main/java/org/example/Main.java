@@ -223,35 +223,16 @@ public class Main {
 
                 System.out.println("Configuration loaded!");
 
-//                System.out.println("STANDARD SYMBOLS - " + standardSymbols.size());
-//                for (Symbol standardS : standardSymbols) {
-//                    System.out.println(standardS.toString());
-//                }
-
-//                System.out.println("BONUS SYMBOLS - " + bonusSymbols.size());
-//                for (Symbol bonusS : bonusSymbols) {
-//                    System.out.println(bonusS.toString());
-//                }
-
-                System.out.println("STANDARD PROBABILITIES - " + standardProbabilities.size());
-                for (Probability standardP : standardProbabilities) {
-                    System.out.println(standardP.toString());
-                }
-
-//                System.out.println("BONUS PROBABILITIES - " + bonusProbabilities.size());
-//                for (Probability bonusP : bonusProbabilities) {
-//                    System.out.println(bonusP.toString());
-//                }
 
 //                System.out.println("WIN SCENARIOS  - " + winScenarios.size());
 //                for (WinScenario winS : winScenarios) {
 //                    System.out.println(winS.toString());
 //                }
 
-                System.out.println("Creating a " + rows + "x" + columns + " matrix...");
-
                 Matrix gameMatrix = new Matrix(rows, columns, standardSymbols, bonusSymbols,
                         standardProbabilities, bonusProbabilities);
+
+                System.out.println(gameMatrix.toString());
 
                 System.out.println("BETTING AMOUNT - " + bettingAmount);
             } catch (IOException e) {
