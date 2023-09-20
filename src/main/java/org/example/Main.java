@@ -3,6 +3,7 @@ package org.example;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.File;
 import java.io.IOException;
@@ -223,18 +224,45 @@ public class Main {
 
                 System.out.println("Configuration loaded!");
 
+                Game matrix = new Game(rows, columns, standardSymbols, bonusSymbols,
+                        standardProbabilities, bonusProbabilities, winScenarios);
 
-//                System.out.println("WIN SCENARIOS  - " + winScenarios.size());
-//                for (WinScenario winS : winScenarios) {
-//                    System.out.println(winS.toString());
-//                }
+                ObjectMapper mapper = new ObjectMapper();
 
-                Matrix gameMatrix = new Matrix(rows, columns, standardSymbols, bonusSymbols,
-                        standardProbabilities, bonusProbabilities);
+                ObjectNode jsonNodes = mapper.createObjectNode();
 
-                System.out.println(gameMatrix.toString());
+                /* MATRIX */
+                ArrayNode matrixArray = objectMapper.createArrayNode();
+                for (String[] row : matrix.getGameMatrix()) {
+                    ArrayNode rowArray = objectMapper.createArrayNode();
 
-                System.out.println("BETTING AMOUNT - " + bettingAmount);
+                    for (String value : row) {
+                        rowArray.add(value);
+                    }
+
+                    matrixArray.add(rowArray);
+                }
+
+                /* WIN SCENARIOS */
+                ObjectNode appliedWinScenarios = objectMapper.createObjectNode();
+                for (Map.Entry<String, String[]> entry : matrix.getAppliedWinScenarios().entrySet()) {
+                    ArrayNode rowArray = objectMapper.createArrayNode();
+
+                    for (String value : entry.getValue()) {
+                        rowArray.add(value);
+                    }
+                    appliedWinScenarios.put(entry.getKey(), rowArray);
+                }
+
+
+                jsonNodes.set("matrix", matrixArray);
+                jsonNodes.put("reward", "");
+                jsonNodes.set("applied_winning_combinations", appliedWinScenarios);
+                jsonNodes.put("applied_bonus_symbol", matrix.getAppliedBonusSymbol());
+
+                String response = mapper.writeValueAsString(jsonNodes);
+
+                System.out.println(response);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
