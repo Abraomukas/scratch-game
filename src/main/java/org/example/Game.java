@@ -10,6 +10,7 @@ import java.util.Random;
 public class Game {
     private final @Getter int columns;
     private final @Getter int rows;
+    private final @Getter int bettingAmount;
     private final @Getter String[][] gameMatrix;
     private final List<Symbol> standardSymbols;
     private final List<Symbol> bonusSymbols;
@@ -17,14 +18,16 @@ public class Game {
     private final List<Probability> bonusProbabilities;
 
     private final List<WinScenario> winScenarios;
+    private final @Getter int reward;
     private @Getter Map<String, Integer> symbolOccurrences;
     private @Getter Map<String, String[]> appliedWinScenarios;
     private @Getter String appliedBonusSymbol;
 
-    public Game(int columns, int rows, List<Symbol> standardSymbols, List<Symbol> bonusSymbols,
+    public Game(int columns, int rows, int bettingAmount, List<Symbol> standardSymbols, List<Symbol> bonusSymbols,
                 List<Probability> standardProbabilities, List<Probability> bonusProbabilities, List<WinScenario> winScenarios) {
         this.columns = columns;
         this.rows = rows;
+        this.bettingAmount = bettingAmount;
 
         gameMatrix = new String[rows][columns];
 
@@ -35,8 +38,13 @@ public class Game {
         this.winScenarios = winScenarios;
 
         populateMatrix();
-    }
 
+        countSymbols();
+
+        verifyWinScenarios();
+
+        reward = calculateReward(bettingAmount, appliedWinScenarios, appliedBonusSymbol);
+    }
 
     private void populateMatrix() {
         System.out.println("Creating a " + rows + "x" + columns + " matrix...");
@@ -52,7 +60,7 @@ public class Game {
 
                 if (row == bonusRow && column == bonusColumn) {
                     String bonusLabel = selectBonusSymbol(bonusProbabilities);
-                    Symbol bonusSymbol = null;
+                    Symbol bonusSymbol = new Symbol();
 
                     for (Symbol symbol : bonusSymbols) {
 
@@ -65,7 +73,7 @@ public class Game {
                     this.setSymbol(row, column, bonusSymbol);
                 } else {
                     String symbolLabel = selectStandardSymbol(row, column, standardProbabilities);
-                    Symbol standardSymbol = null;
+                    Symbol standardSymbol = new Symbol();
 
                     for (Symbol symbol : standardSymbols) {
 
@@ -78,10 +86,6 @@ public class Game {
                 }
             }
         }
-
-        this.countSymbols();
-
-        this.verifyWinScenarios();
     }
 
     private String selectStandardSymbol(int row, int column, List<Probability> standardProbabilities) {
@@ -277,5 +281,51 @@ public class Game {
         }
 
         return true;
+    }
+
+    private int calculateReward(int bettingAmount, Map<String, String[]> appliedWinScenarios,
+                                String appliedBonusSymbol) {
+        int reward = 0;
+
+        if (appliedWinScenarios.isEmpty()) {
+            return reward;
+        }
+
+        for (String label : appliedWinScenarios.keySet()) {
+            String[] winScenarioLabels = appliedWinScenarios.get(label);
+
+            for (String winS : winScenarioLabels) {
+                WinScenario scenario;
+
+                for (WinScenario winScenario : winScenarios) {
+
+                    if (winScenario.getLabel().equals(winS)) {
+                        scenario = winScenario;
+                        reward += bettingAmount * scenario.getMultiplier();
+                    }
+                }
+            }
+        }
+
+        Symbol bonus;
+
+        for (Symbol bonusS : bonusSymbols) {
+
+            if (bonusS.getLabel().equals(appliedBonusSymbol)) {
+                bonus = bonusS;
+
+                if (bonus.getImpact().equals("multiply_reward")) {
+                    reward *= bonus.getMultiplier();
+                    break;
+                }
+
+                if (bonus.getImpact().equals("extra_bonus")) {
+                    reward += bonus.getMultiplier();
+                    break;
+                }
+            }
+        }
+
+        return reward;
     }
 }

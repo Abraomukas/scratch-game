@@ -7,7 +7,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 public class Main {
     public static void main(String[] args) {
@@ -18,33 +21,34 @@ public class Main {
         } else if (!args[2].equals("--betting-amount")) {
             System.out.println("The second parameter is NOT correct! It has to be '--betting-amount'");
         } else {
-            Scanner scanner = new Scanner(System.in);
-            int bettingAmount = 0;
-            boolean validInput = false;
-
-            while (!validInput) {
-                try {
-                    System.out.println("Please enter a betting amount: ");
-
-                    if (scanner.hasNextInt()) {
-                        bettingAmount = scanner.nextInt();
-                        validInput = true;
-                    } else {
-                        scanner.nextLine();
-                        System.out.println("Incorrect input!");
-                        System.out.println("Please enter a betting amount: ");
-                    }
-                } catch (InputMismatchException exception) {
-                    scanner.nextLine();
-                    System.out.println("Incorrect input!");
-                    System.out.println("Please enter a betting amount: ");
-                }
-            }
-
-            scanner.close();
+//            Scanner scanner = new Scanner(System.in);
+//            int bettingAmount = 0;
+//            boolean validInput = false;
+//
+//            while (!validInput) {
+//                try {
+//                    System.out.println("Please enter a betting amount: ");
+//
+//                    if (scanner.hasNextInt()) {
+//                        bettingAmount = scanner.nextInt();
+//                        validInput = true;
+//                    } else {
+//                        scanner.nextLine();
+//                        System.out.println("Incorrect input!");
+//                        System.out.println("Please enter a betting amount: ");
+//                    }
+//                } catch (InputMismatchException exception) {
+//                    scanner.nextLine();
+//                    System.out.println("Incorrect input!");
+//                    System.out.println("Please enter a betting amount: ");
+//                }
+//            }
+//
+//            scanner.close();
 
             ObjectMapper objectMapper = new ObjectMapper();
             String configPath = args[1];
+            int bettingAmount = Integer.parseInt(args[3]);
 
             try {
                 JsonNode jsonNode = objectMapper.readTree(new File(configPath));
@@ -90,6 +94,8 @@ public class Main {
                         }
 
                         if (type.equals("bonus")) {
+                            String impact = objectNode.get("impact").asText();
+                            tmpSymbol.setImpact(impact);
                             bonusSymbols.add(tmpSymbol);
                         }
                     }
@@ -223,8 +229,9 @@ public class Main {
                 }
 
                 System.out.println("Configuration loaded!");
+                System.out.println();
 
-                Game matrix = new Game(rows, columns, standardSymbols, bonusSymbols,
+                Game matrix = new Game(rows, columns, bettingAmount, standardSymbols, bonusSymbols,
                         standardProbabilities, bonusProbabilities, winScenarios);
 
                 ObjectMapper mapper = new ObjectMapper();
@@ -251,14 +258,20 @@ public class Main {
                     for (String value : entry.getValue()) {
                         rowArray.add(value);
                     }
+
                     appliedWinScenarios.put(entry.getKey(), rowArray);
                 }
 
-
                 jsonNodes.set("matrix", matrixArray);
-                jsonNodes.put("reward", "");
-                jsonNodes.set("applied_winning_combinations", appliedWinScenarios);
-                jsonNodes.put("applied_bonus_symbol", matrix.getAppliedBonusSymbol());
+                jsonNodes.put("reward", matrix.getReward());
+
+                if (!appliedWinScenarios.isEmpty()) {
+                    jsonNodes.set("applied_winning_combinations", appliedWinScenarios);
+
+                    if (!matrix.getAppliedBonusSymbol().equals("MISS")) {
+                        jsonNodes.put("applied_bonus_symbol", matrix.getAppliedBonusSymbol());
+                    }
+                }
 
                 String response = mapper.writeValueAsString(jsonNodes);
 
