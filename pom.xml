@@ -52,7 +52,21 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- POWERMOCK MODULE JUNIT4 -->
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-module-junit4</artifactId>
+            <version>2.0.9</version>
+            <scope>test</scope>
+        </dependency>
 
+        <!-- POWERMOCK API MOCKITO -->
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-api-mockito</artifactId>
+            <version>1.7.4</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
