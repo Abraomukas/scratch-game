@@ -4,7 +4,7 @@ import lombok.Data;
 
 public @Data class Symbol {
     private String label;
-    private int multiplier;
+    private double multiplier;
     private String type;
     private String impact;
 }

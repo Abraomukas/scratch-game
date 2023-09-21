@@ -2,23 +2,19 @@ package org.example;
 
 import lombok.Getter;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 public class Game {
     private final @Getter int columns;
     private final @Getter int rows;
     private final @Getter int bettingAmount;
-    private final @Getter String[][] gameMatrix;
     private final List<Symbol> standardSymbols;
     private final List<Symbol> bonusSymbols;
     private final List<Probability> standardProbabilities;
     private final List<Probability> bonusProbabilities;
-
     private final List<WinScenario> winScenarios;
-    private final @Getter int reward;
+    private final @Getter double reward;
+    private @Getter String[][] gameMatrix;
     private @Getter Map<String, Integer> symbolOccurrences;
     private @Getter Map<String, String[]> appliedWinScenarios;
     private @Getter String appliedBonusSymbol;
@@ -70,7 +66,7 @@ public class Game {
                     }
 
                     appliedBonusSymbol = bonusSymbol.getLabel();
-                    this.setSymbol(row, column, bonusSymbol);
+                    setSymbol(row, column, bonusSymbol);
                 } else {
                     String symbolLabel = selectStandardSymbol(row, column, standardProbabilities);
                     Symbol standardSymbol = new Symbol();
@@ -82,7 +78,7 @@ public class Game {
                         }
                     }
 
-                    this.setSymbol(row, column, standardSymbol);
+                    setSymbol(row, column, standardSymbol);
                 }
             }
         }
@@ -167,32 +163,52 @@ public class Game {
                 /* OCCURRENCES*/
                 appliedWinScenarios.put(label, sameSymbolXTimes(occurrences));
 
+                String[] existingArray = appliedWinScenarios.get(label);
+
                 /* HORIZONTAL*/
                 if (sameSymbolHorizontally(label)) {
                     String[] horizontalBonus = new String[]{"same_symbols_horizontally"};
 
-                    appliedWinScenarios.put(label, horizontalBonus);
+                    String[] combinedArray = Arrays.copyOf(existingArray, existingArray.length + horizontalBonus.length);
+                    System.arraycopy(horizontalBonus, 0, combinedArray, existingArray.length, horizontalBonus.length);
+
+                    appliedWinScenarios.put(label, combinedArray);
                 }
+
+                existingArray = appliedWinScenarios.get(label);
 
                 /* VERTICAL */
                 if (sameSymbolVertically(label)) {
                     String[] verticalBonus = new String[]{"same_symbols_vertically"};
 
-                    appliedWinScenarios.put(label, verticalBonus);
+                    String[] combinedArray = Arrays.copyOf(existingArray, existingArray.length + verticalBonus.length);
+                    System.arraycopy(verticalBonus, 0, combinedArray, existingArray.length, verticalBonus.length);
+
+                    appliedWinScenarios.put(label, combinedArray);
                 }
+
+                existingArray = appliedWinScenarios.get(label);
 
                 /* LTR DIAGONAL */
                 if (ltrDiagonal(label)) {
                     String[] ltrDiagonalBonus = new String[]{"same_symbols_diagonally_left_to_right"};
 
-                    appliedWinScenarios.put(label, ltrDiagonalBonus);
+                    String[] combinedArray = Arrays.copyOf(existingArray, existingArray.length + ltrDiagonalBonus.length);
+                    System.arraycopy(ltrDiagonalBonus, 0, combinedArray, existingArray.length, ltrDiagonalBonus.length);
+
+                    appliedWinScenarios.put(label, combinedArray);
                 }
+
+                existingArray = appliedWinScenarios.get(label);
 
                 /* RTL DIAGONAL */
                 if (rtlDiagonal(label)) {
                     String[] rtlDiagonalBonus = new String[]{"same_symbols_diagonally_right_to_left"};
 
-                    appliedWinScenarios.put(label, rtlDiagonalBonus);
+                    String[] combinedArray = Arrays.copyOf(existingArray, existingArray.length + rtlDiagonalBonus.length);
+                    System.arraycopy(rtlDiagonalBonus, 0, combinedArray, existingArray.length, rtlDiagonalBonus.length);
+
+                    appliedWinScenarios.put(label, combinedArray);
                 }
             }
         }
@@ -263,7 +279,6 @@ public class Game {
                     return false;
                 }
             }
-
         }
 
         return true;
@@ -283,17 +298,26 @@ public class Game {
         return true;
     }
 
-    private int calculateReward(int bettingAmount, Map<String, String[]> appliedWinScenarios,
-                                String appliedBonusSymbol) {
-        int reward = 0;
+    private double calculateReward(int bettingAmount, Map<String, String[]> appliedWinScenarios, String appliedBonusSymbol) {
+        double reward = 0.0;
 
         if (appliedWinScenarios.isEmpty()) {
             return reward;
         }
 
         for (String label : appliedWinScenarios.keySet()) {
-            String[] winScenarioLabels = appliedWinScenarios.get(label);
+            Symbol symbol = new Symbol();
 
+            for (Symbol s : standardSymbols) {
+                if (s.getLabel().equals(label)) {
+                    symbol = s;
+                    break;
+                }
+            }
+
+            reward += bettingAmount * symbol.getMultiplier();
+
+            String[] winScenarioLabels = appliedWinScenarios.get(label);
             for (String winS : winScenarioLabels) {
                 WinScenario scenario;
 
@@ -301,7 +325,8 @@ public class Game {
 
                     if (winScenario.getLabel().equals(winS)) {
                         scenario = winScenario;
-                        reward += bettingAmount * scenario.getMultiplier();
+                        reward *= scenario.getMultiplier();
+                        break;
                     }
                 }
             }

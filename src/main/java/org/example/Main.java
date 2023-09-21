@@ -46,6 +46,8 @@ public class Main {
 //
 //            scanner.close();
 
+//        String configPath = "config.json";
+
             ObjectMapper objectMapper = new ObjectMapper();
             String configPath = args[1];
             int bettingAmount = Integer.parseInt(args[3]);
@@ -75,13 +77,13 @@ public class Main {
                         JsonNode objectNode = symbol.getValue();
 
                         String type = objectNode.get("type").asText();
-                        int multiplier;
+                        double multiplier;
                         JsonNode rewardMultiplier = objectNode.findValue("reward_multiplier");
 
                         if (rewardMultiplier == null) {
-                            multiplier = 1;
+                            multiplier = 1.0;
                         } else {
-                            multiplier = objectNode.get("reward_multiplier").asInt();
+                            multiplier = objectNode.get("reward_multiplier").asDouble();
                         }
 
                         Symbol tmpSymbol = new Symbol();
@@ -188,7 +190,7 @@ public class Main {
                         String label = winCombination.getKey();
                         JsonNode details = winCombination.getValue();
 
-                        int multiplier = details.get("reward_multiplier").asInt();
+                        double multiplier = details.get("reward_multiplier").asDouble();
                         int counter;
                         JsonNode count = details.findValue("count");
 
@@ -267,11 +269,9 @@ public class Main {
 
                 if (!appliedWinScenarios.isEmpty()) {
                     jsonNodes.set("applied_winning_combinations", appliedWinScenarios);
-
-                    if (!matrix.getAppliedBonusSymbol().equals("MISS")) {
-                        jsonNodes.put("applied_bonus_symbol", matrix.getAppliedBonusSymbol());
-                    }
                 }
+
+                jsonNodes.put("applied_bonus_symbol", matrix.getAppliedBonusSymbol());
 
                 String response = mapper.writeValueAsString(jsonNodes);
 
